@@ -65,5 +65,5 @@ class VCP(abc.ABC):
         """
         pass
 
-    def get_vcp_capabilities(self):
+    def get_vcp_capabilities(self) -> dict:
         pass

@@ -206,7 +206,7 @@ if sys.platform.startswith("linux"):
 
             return feature_current, feature_max
 
-        def get_vcp_capabilities(self):
+        def get_vcp_capabilities(self) -> dict:
             """
             Gets capabilities string from the virtual control panel.
 
@@ -221,8 +221,11 @@ if sys.platform.startswith("linux"):
                 VCPError: Failed to get VCP feature.
             """
 
+            raise NotImplementedError("get_vcp_capabilities in vcp_linux not yet working")
+
             # Create an empty capabilities string to be filled with the data
             caps_str = ""
+            caps_dict = {}
 
             self.rate_limt()
 
@@ -302,7 +305,7 @@ if sys.platform.startswith("linux"):
             if loop_count >= loop_count_limit:
                 raise VCPIOError("Capabilities string incomplete or too long")
 
-            return caps_str
+            return caps_dict
 
         @staticmethod
         def get_checksum(data: bytearray) -> int:
