@@ -64,3 +64,6 @@ class VCP(abc.ABC):
             VCPError: Failed to get VCP feature.
         """
         pass
+
+    def get_vcp_capabilities(self):
+        pass
