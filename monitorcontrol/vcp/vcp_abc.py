@@ -101,6 +101,6 @@ class VCP(abc.ABC):
         if code.value in self.code_maximum:
             return self.code_maximum[code.value]
         else:
-            _, maximum = self.vcp.get_vcp_feature(code.value)
+            _, maximum = self.get_vcp_feature(code)
             self.code_maximum[code.value] = maximum
             return maximum
