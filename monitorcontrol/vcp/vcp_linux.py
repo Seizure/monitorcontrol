@@ -1,3 +1,4 @@
+from . import VCPCode
 from .vcp_abc import VCP, VCPIOError, VCPPermissionError
 from types import TracebackType
 from typing import List, Optional, Tuple, Type
@@ -53,7 +54,7 @@ if sys.platform.startswith("linux"):
             Args:
                 bus_number: I2C bus number.
             """
-            self.logger = logging.getLogger(__name__)
+            super().__init__()
             self.bus_number = bus_number
             self.fd: Optional[str] = None
             self.fp: str = f"/dev/i2c-{self.bus_number}"
@@ -61,6 +62,7 @@ if sys.platform.startswith("linux"):
             self.last_set: Optional[float] = None
 
         def __enter__(self):
+            super().__enter__()
             def cleanup(fd: Optional[int]):
                 if fd is not None:
                     try:
@@ -95,9 +97,9 @@ if sys.platform.startswith("linux"):
                 raise VCPIOError("unable to close descriptor") from e
             self.fd = None
 
-            return False
+            return super().__exit__(exception_type, exception_value, exception_traceback)
 
-        def set_vcp_feature(self, code: int, value: int):
+        def set_vcp_feature(self, code: VCPCode, value: int):
             """
             Sets the value of a feature on the virtual control panel.
 
@@ -108,12 +110,21 @@ if sys.platform.startswith("linux"):
             Raises:
                 VCPIOError: failed to set VCP feature
             """
+
+            assert self._in_ctx, "This function must be run within the context manager"
+            if code.type == "ro":
+                raise TypeError(f"cannot write read-only code: {code.name}")
+            elif code.type == "rw" and code.function == "c":
+                maximum = self._get_code_maximum(code)
+                if value > maximum:
+                    raise ValueError(f"value of {value} exceeds code maximum of {maximum}")
+
             self.rate_limt()
 
             # transmission data
             data = bytearray()
             data.append(self.SET_VCP_CMD)
-            data.append(code)
+            data.append(code.value)
             low_byte, high_byte = struct.pack("H", value)
             data.append(high_byte)
             data.append(low_byte)
@@ -130,7 +141,7 @@ if sys.platform.startswith("linux"):
             # store time of last set VCP
             self.last_set = time.time()
 
-        def get_vcp_feature(self, code: int) -> Tuple[int, int]:
+        def get_vcp_feature(self, code: VCPCode) -> Tuple[int, int]:
             """
             Gets the value of a feature from the virtual control panel.
 
@@ -143,12 +154,17 @@ if sys.platform.startswith("linux"):
             Raises:
                 VCPIOError: Failed to get VCP feature.
             """
+
+            assert self._in_ctx, "This function must be run within the context manager"
+            if code.type == "wo":
+                raise TypeError(f"cannot read write-only code: {code.name}")
+
             self.rate_limt()
 
             # transmission data
             data = bytearray()
             data.append(self.GET_VCP_CMD)
-            data.append(code)
+            data.append(code.value)
 
             # add headers and footers
             data.insert(0, (len(data) | self.PROTOCOL_FLAG))
@@ -194,7 +210,7 @@ if sys.platform.startswith("linux"):
             if reply_code != self.GET_VCP_REPLY:
                 raise VCPIOError(f"received unexpected response code: {reply_code}")
 
-            if vcp_opcode != code:
+            if vcp_opcode != code.value:
                 raise VCPIOError(f"received unexpected opcode: {vcp_opcode}")
 
             if result_code > 0:
@@ -222,6 +238,8 @@ if sys.platform.startswith("linux"):
             """
 
             raise NotImplementedError("get_vcp_capabilities in vcp_linux not yet working")
+
+            assert self._in_ctx, "This function must be run within the context manager"
 
             # Create an empty capabilities string to be filled with the data
             caps_str = ""

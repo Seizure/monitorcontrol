@@ -37,10 +37,11 @@ if sys.platform == "win32":
             Args:
                 hmonitor: logical monitor handle
             """
-            self.logger = logging.getLogger(__name__)
+            super().__init__()
             self.hmonitor = hmonitor
 
         def __enter__(self):
+            super().__enter__()
             num_physical = DWORD()
             self.logger.debug("GetNumberOfPhysicalMonitorsFromHMONITOR")
             try:
@@ -94,9 +95,10 @@ if sys.platform == "win32":
                     )
             except OSError as e:
                 raise VCPError("failed to close handle") from e
-            return False
 
-        def set_vcp_feature(self, code: int, value: int):
+            return super().__exit__(exception_type, exception_value, exception_traceback)
+
+        def set_vcp_feature(self, code: VCPCode, value: int):
             """
             Sets the value of a feature on the virtual control panel.
 
@@ -107,16 +109,25 @@ if sys.platform == "win32":
             Raises:
                 VCPError: Failed to set VCP feature.
             """
+
+            assert self._in_ctx, "This function must be run within the context manager"
+            if code.type == "ro":
+                raise TypeError(f"cannot write read-only code: {code.name}")
+            elif code.type == "rw" and code.function == "c":
+                maximum = self._get_code_maximum(code)
+                if value > maximum:
+                    raise ValueError(f"value of {value} exceeds code maximum of {maximum}")
+
             self.logger.debug(f"SetVCPFeature(_, {code=}, {value=})")
             try:
                 if not ctypes.windll.dxva2.SetVCPFeature(
-                    HANDLE(self.handle), BYTE(code), DWORD(value)
+                    HANDLE(self.handle), BYTE(code.value), DWORD(value)
                 ):
                     raise VCPError("failed to set VCP feature: " + ctypes.FormatError())
             except OSError as e:
                 raise VCPError("failed to close handle") from e
 
-        def get_vcp_feature(self, code: int) -> Tuple[int, int]:
+        def get_vcp_feature(self, code: VCPCode) -> Tuple[int, int]:
             """
             Gets the value of a feature from the virtual control panel.
 
@@ -129,6 +140,11 @@ if sys.platform == "win32":
             Raises:
                 VCPError: Failed to get VCP feature.
             """
+
+            assert self._in_ctx, "This function must be run within the context manager"
+            if code.type == "wo":
+                raise TypeError(f"cannot read write-only code: {code.name}")
+
             feature_current = DWORD()
             feature_max = DWORD()
             self.logger.debug(
@@ -165,6 +181,8 @@ if sys.platform == "win32":
             Raises:
                 VCPError: Failed to get VCP feature.
             """
+
+            assert self._in_ctx, "This function must be run within the context manager"
 
             cap_length = DWORD()
             self.logger.debug("GetCapabilitiesStringLength")

@@ -12,5 +12,5 @@ if sys.platform == "win32":
 elif sys.platform.startswith("linux"):
     from .vcp_linux import get_vcps  # noqa: F401
 else:
-    def getvpcs():
+    def get_vpcs():
         raise NotImplementedError("Your OS is not supported. Supported OSs are: Windows, Linux")

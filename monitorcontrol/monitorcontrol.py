@@ -79,138 +79,9 @@ class InputSourceValueError(ValueError):
 
 
 class Monitor:
-    """
-    A physical monitor attached to a Virtual Control Panel (VCP).
 
-    Typically, you do not use this class directly and instead use
-    :py:meth:`get_monitors` to get a list of initialized monitors.
-
-    All class methods must be called from within a context manager unless
-    otherwise stated.
-
-    Args:
-        vcp: Virtual control panel for the monitor.
-    """
-
-    def __init__(self, vcp: vcp.VCP):
-        self.vcp = vcp
-        self.code_maximum = {}
-        self._in_ctx = False
-
-    def __enter__(self):
-        self.vcp.__enter__()
-        self._in_ctx = True
-        return self
-
-    def __exit__(
-        self,
-        exception_type: Optional[Type[BaseException]],
-        exception_value: Optional[BaseException],
-        exception_traceback: Optional[TracebackType],
-    ) -> Optional[bool]:
-        try:
-            return self.vcp.__exit__(
-                exception_type, exception_value, exception_traceback
-            )
-        finally:
-            self._in_ctx = False
-
-    def _get_code_maximum(self, code: vcp.VCPCode) -> int:
-        """
-        Gets the maximum values for a given code, and caches in the
-        class dictionary if not already found.
-
-        Args:
-            code: Feature code definition class.
-
-        Returns:
-            Maximum value for the given code.
-
-        Raises:
-            TypeError: Code is write only.
-        """
-        assert self._in_ctx, "This function must be run within the context manager"
-        if not code.readable:
-            raise TypeError(f"code is not readable: {code.name}")
-
-        if code.value in self.code_maximum:
-            return self.code_maximum[code.value]
-        else:
-            _, maximum = self.vcp.get_vcp_feature(code.value)
-            self.code_maximum[code.value] = maximum
-            return maximum
-
-    def _set_vcp_feature(self, code: vcp.VCPCode, value: int):
-        """
-        Sets the value of a feature on the virtual control panel.
-
-        Args:
-            code: Feature code.
-            value: Feature value.
-
-        Raises:
-            TypeError: Code is ready only.
-            ValueError: Value is greater than the maximum allowable.
-            VCPError: Failed to get VCP feature.
-        """
-        assert self._in_ctx, "This function must be run within the context manager"
-        if code.type == "ro":
-            raise TypeError(f"cannot write read-only code: {code.name}")
-        elif code.type == "rw" and code.function == "c":
-            maximum = self._get_code_maximum(code)
-            if value > maximum:
-                raise ValueError(f"value of {value} exceeds code maximum of {maximum}")
-
-        self.vcp.set_vcp_feature(code.value, value)
-
-    def _get_vcp_feature(self, code: vcp.VCPCode) -> int:
-        """
-        Gets the value of a feature from the virtual control panel.
-
-        Args:
-            code: Feature code.
-
-        Returns:
-            Current feature value.
-
-        Raises:
-            TypeError: Code is write only.
-            VCPError: Failed to get VCP feature.
-        """
-        assert self._in_ctx, "This function must be run within the context manager"
-        if code.type == "wo":
-            raise TypeError(f"cannot read write-only code: {code.name}")
-
-        current, maximum = self.vcp.get_vcp_feature(code.value)
-        return current
-
-    def get_vcp_capabilities(self) -> dict:
-        """
-        Gets the capabilities of the monitor
-
-        Returns:
-            Dictionary of capabilities in the following example format::
-
-                {
-                    "prot": "monitor",
-                    "type": "LCD",
-                    "cmds": {
-                            1: [],
-                            2: [],
-                            96: [15, 17, 18],
-                    },
-                    "inputs": [
-                        InputSource.DP1,
-                        InputSource.HDMI1,
-                        InputSource.HDMI2
-                        # this may return integers for out-of-spec values,
-                        # such as USB Type-C monitors
-                    ],
-                }
-        """
-        assert self._in_ctx, "This function must be run within the context manager"
-
-        return self.vcp.get_vcp_capabilities()
+    def __init__(self, cp: vcp.VCP):
+        self.vcp = cp
 
     def get_luminance(self) -> int:
         """
@@ -232,7 +103,7 @@ class Monitor:
             VCPError: Failed to get luminance from the VCP.
         """
         code = vcp.VCPCode("image_luminance")
-        return self._get_vcp_feature(code)
+        return self.vcp.get_vcp_feature(code)[0]
 
     def set_luminance(self, value: int):
         """
@@ -255,7 +126,7 @@ class Monitor:
             VCPError: Failed to set luminance in the VCP.
         """
         code = vcp.VCPCode("image_luminance")
-        self._set_vcp_feature(code, value)
+        self.vcp.set_vcp_feature(code, value)
 
     def get_color_preset(self) -> int:
         """
@@ -278,7 +149,7 @@ class Monitor:
             VCPError: Failed to get color preset from the VCP.
         """
         code = vcp.VCPCode("image_color_preset")
-        return self._get_vcp_feature(code)
+        return self.vcp.get_vcp_feature(code)[0]
 
     def set_color_preset(self, value: Union[int, str, ColorPreset]):
         """
@@ -315,7 +186,7 @@ class Monitor:
             raise TypeError("unsupported color preset: " + repr(type(value)))
 
         code = vcp.VCPCode("image_color_preset")
-        self._set_vcp_feature(code, mode_value)
+        self.vcp.set_vcp_feature(code, mode_value)
 
     def get_contrast(self) -> int:
         """
@@ -337,7 +208,7 @@ class Monitor:
             VCPError: Failed to get contrast from the VCP.
         """
         code = vcp.VCPCode("image_contrast")
-        return self._get_vcp_feature(code)
+        return self.vcp.get_vcp_feature(code)[0]
 
     def set_contrast(self, value: int):
         """
@@ -360,7 +231,7 @@ class Monitor:
             VCPError: Failed to set contrast in the VCP.
         """
         code = vcp.VCPCode("image_contrast")
-        self._set_vcp_feature(code, value)
+        self.vcp.set_vcp_feature(code, value)
 
     def get_power_mode(self) -> PowerMode:
         """
@@ -384,8 +255,7 @@ class Monitor:
             KeyError: Set power mode string is invalid.
         """
         code = vcp.VCPCode("display_power_mode")
-        value = self._get_vcp_feature(code)
-        return PowerMode(value)
+        return PowerMode(self.vcp.get_vcp_feature(code)[0])
 
     def set_power_mode(self, value: Union[int, str, PowerMode]):
         """
@@ -421,7 +291,7 @@ class Monitor:
             raise TypeError("unsupported mode type: " + repr(type(value)))
 
         code = vcp.VCPCode("display_power_mode")
-        self._set_vcp_feature(code, mode_value)
+        self.vcp.set_vcp_feature(code, mode_value)
 
     def get_input_source(self) -> InputSource:
         """
@@ -456,7 +326,7 @@ class Monitor:
                 Input source value is not within the MCCS defined inputs.
         """
         code = vcp.VCPCode("input_select")
-        value = self._get_vcp_feature(code) & 0xFF
+        value = self.vcp.get_vcp_feature(code)[0] & 0xFF
         try:
             return InputSource(value)
         except ValueError:
@@ -493,10 +363,10 @@ class Monitor:
             raise TypeError("unsupported input type: " + repr(type(value)))
 
         code = vcp.VCPCode("input_select")
-        self._set_vcp_feature(code, mode_value)
+        self.vcp.set_vcp_feature(code, mode_value)
 
 
-def get_vcps() -> List[Type[vcp.VCP]]:
+def get_vcps() -> List[vcp.VCP]:
     """
     Discovers virtual control panels.
 
