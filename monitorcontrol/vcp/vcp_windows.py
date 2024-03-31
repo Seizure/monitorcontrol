@@ -6,6 +6,8 @@ import ctypes
 import logging
 import sys
 
+from .vcp_codes import get_vcp_code, VCPCodeFunction
+
 # hide the Windows code from Linux CI coverage
 if sys.platform == "win32":
     from ctypes.wintypes import (
@@ -111,14 +113,14 @@ if sys.platform == "win32":
             """
 
             assert self._in_ctx, "This function must be run within the context manager"
-            if code.type == "ro":
+            if not code.writeable():
                 raise TypeError(f"cannot write read-only code: {code.name}")
-            elif code.type == "rw" and code.function == "c":
+            elif code.readable() and code.function == VCPCodeFunction.c:
                 maximum = self._get_code_maximum(code)
                 if value > maximum:
-                    raise ValueError(f"value of {value} exceeds code maximum of {maximum}")
+                    raise ValueError(f"value of {value} exceeds code maximum of {maximum} for {code.name}")
 
-            self.logger.debug(f"SetVCPFeature(_, {code=}, {value=})")
+            self.logger.debug(f"SetVCPFeature(_, {code.name=}, {value=})")
             try:
                 if not ctypes.windll.dxva2.SetVCPFeature(
                     HANDLE(self.handle), BYTE(code.value), DWORD(value)
@@ -142,18 +144,18 @@ if sys.platform == "win32":
             """
 
             assert self._in_ctx, "This function must be run within the context manager"
-            if code.type == "wo":
+            if not code.readable():
                 raise TypeError(f"cannot read write-only code: {code.name}")
 
             feature_current = DWORD()
             feature_max = DWORD()
             self.logger.debug(
-                f"GetVCPFeatureAndVCPFeatureReply(_, {code=}, None, _, _)"
+                f"GetVCPFeatureAndVCPFeatureReply(_, {code.name=}, None, _, _)"
             )
             try:
                 if not ctypes.windll.dxva2.GetVCPFeatureAndVCPFeatureReply(
                     HANDLE(self.handle),
-                    BYTE(code),
+                    BYTE(code.value),
                     None,
                     ctypes.byref(feature_current),
                     ctypes.byref(feature_max),
@@ -359,7 +361,7 @@ if sys.platform == "win32":
                 caps_dict[key] = _extract_a_cap(caps_str, key)
 
         # Parse the input sources into a text list for readability
-        input_source_cap = VCPCode("input_select").value
+        input_source_cap = get_vcp_code("input_select").value
         if input_source_cap in caps_dict["vcp"]:
             caps_dict["inputs"] = []
             input_val_list = list(caps_dict["vcp"][input_source_cap].keys())
@@ -371,7 +373,7 @@ if sys.platform == "win32":
                 caps_dict["inputs"].append(input_source)
 
         # Parse the color presets into a text list for readability
-        color_preset_cap = VCPCode("image_color_preset").value
+        color_preset_cap = get_vcp_code("image_color_preset").value
         if color_preset_cap in caps_dict["vcp"]:
             caps_dict["color_presets"] = []
             color_val_list = list(caps_dict["vcp"][color_preset_cap])

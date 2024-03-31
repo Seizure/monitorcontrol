@@ -8,6 +8,8 @@ import sys
 import time
 import logging
 
+from .vcp_codes import VCPCodeFunction
+
 # hide the Linux code from Windows CI coverage
 if sys.platform.startswith("linux"):
     import fcntl
@@ -112,12 +114,12 @@ if sys.platform.startswith("linux"):
             """
 
             assert self._in_ctx, "This function must be run within the context manager"
-            if code.type == "ro":
+            if not code.writeable():
                 raise TypeError(f"cannot write read-only code: {code.name}")
-            elif code.type == "rw" and code.function == "c":
+            elif code.readable() and code.function == VCPCodeFunction.c:
                 maximum = self._get_code_maximum(code)
                 if value > maximum:
-                    raise ValueError(f"value of {value} exceeds code maximum of {maximum}")
+                    raise ValueError(f"value of {value} exceeds code maximum of {maximum} for {code.name}")
 
             self.rate_limt()
 
@@ -156,7 +158,7 @@ if sys.platform.startswith("linux"):
             """
 
             assert self._in_ctx, "This function must be run within the context manager"
-            if code.type == "wo":
+            if not code.readable():
                 raise TypeError(f"cannot read write-only code: {code.name}")
 
             self.rate_limt()

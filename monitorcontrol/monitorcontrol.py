@@ -4,6 +4,8 @@ from typing import List, Optional, Type, Union
 import enum
 import sys
 
+from .vcp.vcp_codes import get_vcp_code
+
 
 @enum.unique
 class ColorPreset(enum.Enum):
@@ -102,7 +104,7 @@ class Monitor:
         Raises:
             VCPError: Failed to get luminance from the VCP.
         """
-        code = vcp.VCPCode("image_luminance")
+        code = get_vcp_code("image_luminance")
         return self.vcp.get_vcp_feature(code)[0]
 
     def set_luminance(self, value: int):
@@ -125,7 +127,7 @@ class Monitor:
             ValueError: Luminance outside of valid range.
             VCPError: Failed to set luminance in the VCP.
         """
-        code = vcp.VCPCode("image_luminance")
+        code = get_vcp_code("image_luminance")
         self.vcp.set_vcp_feature(code, value)
 
     def get_color_preset(self) -> int:
@@ -148,7 +150,7 @@ class Monitor:
         Raises:
             VCPError: Failed to get color preset from the VCP.
         """
-        code = vcp.VCPCode("image_color_preset")
+        code = get_vcp_code("image_color_preset")
         return self.vcp.get_vcp_feature(code)[0]
 
     def set_color_preset(self, value: Union[int, str, ColorPreset]):
@@ -185,7 +187,7 @@ class Monitor:
         else:
             raise TypeError("unsupported color preset: " + repr(type(value)))
 
-        code = vcp.VCPCode("image_color_preset")
+        code = get_vcp_code("image_color_preset")
         self.vcp.set_vcp_feature(code, mode_value)
 
     def get_contrast(self) -> int:
@@ -207,7 +209,7 @@ class Monitor:
         Raises:
             VCPError: Failed to get contrast from the VCP.
         """
-        code = vcp.VCPCode("image_contrast")
+        code = get_vcp_code("image_contrast")
         return self.vcp.get_vcp_feature(code)[0]
 
     def set_contrast(self, value: int):
@@ -230,7 +232,7 @@ class Monitor:
             ValueError: Contrast outside of valid range.
             VCPError: Failed to set contrast in the VCP.
         """
-        code = vcp.VCPCode("image_contrast")
+        code = get_vcp_code("image_contrast")
         self.vcp.set_vcp_feature(code, value)
 
     def get_power_mode(self) -> PowerMode:
@@ -254,7 +256,7 @@ class Monitor:
             ValueError: Set power state outside of valid range.
             KeyError: Set power mode string is invalid.
         """
-        code = vcp.VCPCode("display_power_mode")
+        code = get_vcp_code("display_power_mode")
         return PowerMode(self.vcp.get_vcp_feature(code)[0])
 
     def set_power_mode(self, value: Union[int, str, PowerMode]):
@@ -290,7 +292,7 @@ class Monitor:
         else:
             raise TypeError("unsupported mode type: " + repr(type(value)))
 
-        code = vcp.VCPCode("display_power_mode")
+        code = get_vcp_code("display_power_mode")
         self.vcp.set_vcp_feature(code, mode_value)
 
     def get_input_source(self) -> InputSource:
@@ -325,7 +327,7 @@ class Monitor:
             InputSourceValueError:
                 Input source value is not within the MCCS defined inputs.
         """
-        code = vcp.VCPCode("input_select")
+        code = get_vcp_code("input_select")
         value = self.vcp.get_vcp_feature(code)[0] & 0xFF
         try:
             return InputSource(value)
@@ -362,7 +364,7 @@ class Monitor:
         else:
             raise TypeError("unsupported input type: " + repr(type(value)))
 
-        code = vcp.VCPCode("input_select")
+        code = get_vcp_code("input_select")
         self.vcp.set_vcp_feature(code, mode_value)
 
 
