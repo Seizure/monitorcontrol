@@ -83,12 +83,10 @@ def get_vcp_com(key: Union[str, int]) -> VPCCommand:
     if not (isinstance(key, str) or isinstance(key, int)):
         raise TypeError(f"key must be string or int. Got {type(key)}.")
     for com in __VCP_COMMANDS:
-        if isinstance(key, str):
-            if com.name == key:
-                return com
-        else:
-            if com.value == key:
-                return com
+        if isinstance(key, str) and com.name == key:
+            return com
+        elif com.value == key:
+            return com
     raise LookupError(f"No VCP code matched key: {key}")
 
 
