@@ -87,19 +87,19 @@ def monitor(request) -> Iterable[Monitor]:
 
 
 def test_get_code_maximum_type_error(monitor: Monitor):
-    code = vcp.VCPCode("image_factory_default")
+    code = vcp.VPCCommand("image_factory_default")
     with pytest.raises(TypeError):
         monitor._get_code_maximum(code)
 
 
 def test_set_vcp_feature_type_error(monitor: Monitor):
-    code = vcp.VCPCode("active_control")
+    code = vcp.VPCCommand("active_control")
     with pytest.raises(TypeError):
         monitor._set_vcp_feature(code, 1)
 
 
 def test_get_vcp_feature_type_error(monitor: Monitor):
-    code = vcp.VCPCode("image_factory_default")
+    code = vcp.VPCCommand("image_factory_default")
     with pytest.raises(TypeError):
         monitor._get_vcp_feature(code)
 

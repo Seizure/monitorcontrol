@@ -1,4 +1,4 @@
-from . import VCPCode
+from . import VPCCommand
 from .vcp_abc import VCP, VCPIOError, VCPPermissionError
 from types import TracebackType
 from typing import List, Optional, Tuple, Type
@@ -8,7 +8,7 @@ import sys
 import time
 import logging
 
-from .vcp_codes import VCPCodeFunction
+from .vcp_codes import ComFunction
 
 # hide the Linux code from Windows CI coverage
 if sys.platform.startswith("linux"):
@@ -101,7 +101,7 @@ if sys.platform.startswith("linux"):
 
             return super().__exit__(exception_type, exception_value, exception_traceback)
 
-        def set_vcp_feature(self, code: VCPCode, value: int):
+        def set_vcp_feature(self, code: VPCCommand, value: int):
             """
             Sets the value of a feature on the virtual control panel.
 
@@ -116,7 +116,7 @@ if sys.platform.startswith("linux"):
             assert self._in_ctx, "This function must be run within the context manager"
             if not code.writeable():
                 raise TypeError(f"cannot write read-only code: {code.name}")
-            elif code.readable() and code.function == VCPCodeFunction.c:
+            elif code.readable() and code.function == ComFunction.c:
                 maximum = self._get_code_maximum(code)
                 if value > maximum:
                     raise ValueError(f"value of {value} exceeds code maximum of {maximum} for {code.name}")
@@ -143,7 +143,7 @@ if sys.platform.startswith("linux"):
             # store time of last set VCP
             self.last_set = time.time()
 
-        def get_vcp_feature(self, code: VCPCode) -> Tuple[int, int]:
+        def get_vcp_feature(self, code: VPCCommand) -> Tuple[int, int]:
             """
             Gets the value of a feature from the virtual control panel.
 

@@ -3,7 +3,7 @@ import logging
 from types import TracebackType
 from typing import Optional, Tuple, Type
 
-from . import VCPCode
+from . import VPCCommand
 
 
 class VCPError(Exception):
@@ -48,7 +48,7 @@ class VCP(abc.ABC):
         return False
 
     @abc.abstractmethod
-    def set_vcp_feature(self, code: VCPCode, value: int):
+    def set_vcp_feature(self, code: VPCCommand, value: int):
         """
         Sets the value of a feature on the virtual control panel.
 
@@ -62,7 +62,7 @@ class VCP(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get_vcp_feature(self, code: VCPCode) -> Tuple[int, int]:
+    def get_vcp_feature(self, code: VPCCommand) -> Tuple[int, int]:
         """
         Gets the value of a feature from the virtual control panel.
 
@@ -80,7 +80,7 @@ class VCP(abc.ABC):
     def get_vcp_capabilities(self) -> dict:
         pass
 
-    def _get_code_maximum(self, code: VCPCode) -> int:
+    def _get_code_maximum(self, code: VPCCommand) -> int:
         """
         Gets the maximum values for a given code, and caches in the
         class dictionary if not already found.

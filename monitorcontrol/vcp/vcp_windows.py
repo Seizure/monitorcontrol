@@ -1,4 +1,4 @@
-from . import VCPCode
+from . import VPCCommand
 from .vcp_abc import VCP, VCPError
 from types import TracebackType
 from typing import List, Optional, Tuple, Type
@@ -6,7 +6,7 @@ import ctypes
 import logging
 import sys
 
-from .vcp_codes import get_vcp_code, VCPCodeFunction
+from .vcp_codes import get_vcp_com, ComFunction
 
 # hide the Windows code from Linux CI coverage
 if sys.platform == "win32":
@@ -100,7 +100,7 @@ if sys.platform == "win32":
 
             return super().__exit__(exception_type, exception_value, exception_traceback)
 
-        def set_vcp_feature(self, code: VCPCode, value: int):
+        def set_vcp_feature(self, code: VPCCommand, value: int):
             """
             Sets the value of a feature on the virtual control panel.
 
@@ -115,7 +115,7 @@ if sys.platform == "win32":
             assert self._in_ctx, "This function must be run within the context manager"
             if not code.writeable():
                 raise TypeError(f"cannot write read-only code: {code.name}")
-            elif code.readable() and code.function == VCPCodeFunction.c:
+            elif code.readable() and code.function == ComFunction.c:
                 maximum = self._get_code_maximum(code)
                 if value > maximum:
                     raise ValueError(f"value of {value} exceeds code maximum of {maximum} for {code.name}")
@@ -129,7 +129,7 @@ if sys.platform == "win32":
             except OSError as e:
                 raise VCPError("failed to close handle") from e
 
-        def get_vcp_feature(self, code: VCPCode) -> Tuple[int, int]:
+        def get_vcp_feature(self, code: VPCCommand) -> Tuple[int, int]:
             """
             Gets the value of a feature from the virtual control panel.
 
@@ -361,7 +361,7 @@ if sys.platform == "win32":
                 caps_dict[key] = _extract_a_cap(caps_str, key)
 
         # Parse the input sources into a text list for readability
-        input_source_cap = get_vcp_code("input_select").value
+        input_source_cap = get_vcp_com("input_select").value
         if input_source_cap in caps_dict["vcp"]:
             caps_dict["inputs"] = []
             input_val_list = list(caps_dict["vcp"][input_source_cap].keys())
@@ -373,7 +373,7 @@ if sys.platform == "win32":
                 caps_dict["inputs"].append(input_source)
 
         # Parse the color presets into a text list for readability
-        color_preset_cap = get_vcp_code("image_color_preset").value
+        color_preset_cap = get_vcp_com("image_color_preset").value
         if color_preset_cap in caps_dict["vcp"]:
             caps_dict["color_presets"] = []
             color_val_list = list(caps_dict["vcp"][color_preset_cap])

@@ -1,5 +1,5 @@
 import sys
-from .vcp_codes import VCPCode  # noqa: F401
+from .vcp_codes import VPCCommand  # noqa: F401
 from .vcp_abc import (  # noqa: F401
     VCP,
     VCPError,

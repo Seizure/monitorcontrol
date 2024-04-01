@@ -1,6 +1,6 @@
 import pytest
 import voluptuous as vol
-from monitorcontrol.vcp.vcp_codes import VCPCode, _VCP_CODE_DEFINTIONS
+from monitorcontrol.vcp.vcp_codes import VPCCommand, _VCP_CODE_DEFINTIONS
 
 
 VCP_CODE_SCHEMA = vol.Schema(
@@ -15,19 +15,19 @@ VCP_CODE_SCHEMA = vol.Schema(
 
 @pytest.fixture(scope="module", params=_VCP_CODE_DEFINTIONS.keys())
 def vcp_code(request):
-    return VCPCode(request.param)
+    return VPCCommand(request.param)
 
 
-def test_vcp_code_schema(vcp_code: VCPCode):
+def test_vcp_code_schema(vcp_code: VPCCommand):
     VCP_CODE_SCHEMA(vcp_code.definition)
 
 
 @pytest.mark.parametrize("property", ["name", "value", "type", "function"])
-def test_properties(vcp_code: VCPCode, property: str):
+def test_properties(vcp_code: VPCCommand, property: str):
     getattr(vcp_code, property)
 
 
-def test_repr(vcp_code: VCPCode):
+def test_repr(vcp_code: VPCCommand):
     repr(vcp_code)
 
 
@@ -35,7 +35,7 @@ def test_repr(vcp_code: VCPCode):
     "test_type, readable", [("ro", True), ("wo", False), ("rw", True)]
 )
 def test_readable(test_type: str, readable: bool):
-    code = VCPCode("image_luminance")
+    code = VPCCommand("image_luminance")
     code.definition["type"] = test_type
     assert code.readable == readable
 
@@ -44,7 +44,7 @@ def test_readable(test_type: str, readable: bool):
     "test_type, writeable", [("ro", False), ("wo", True), ("rw", True)]
 )
 def test_writeable(test_type: str, writeable: bool):
-    code = VCPCode("image_luminance")
+    code = VPCCommand("image_luminance")
     code.definition["type"] = test_type
     assert code.writeable == writeable
 
@@ -61,7 +61,7 @@ def test_properties_value():
         "type": test_type,
         "function": test_function,
     }
-    code = VCPCode("image_luminance")
+    code = VPCCommand("image_luminance")
     code.definition = test_definition
     assert code.name == test_name
     assert code.value == test_value

@@ -1,112 +1,111 @@
-import sys
 from dataclasses import dataclass
 from enum import Enum, unique
 from typing import Union
 
 
 @unique
-class VCPCodeType(Enum):
+class ComType(Enum):
     ro = 0
     wo = 1
     rw = 2
 
 
 @unique
-class VCPCodeFunction(Enum):
+class ComFunction(Enum):
     c = 0
     nc = 1
 
 
 @dataclass(frozen=True)
-class VCPCode:
+class VPCCommand:
     name: str
     desc: str
     value: int
-    type: VCPCodeType
-    function: VCPCodeFunction
+    type: ComType
+    function: ComFunction
 
     def readable(self) -> bool:
-        t = VCPCodeType
+        t = ComType
         return self.type is t.ro or self.type is t.rw
 
     def writeable(self) -> bool:
-        t = VCPCodeType
+        t = ComType
         return self.type is t.wo or self.type is t.rw
 
 
-__VCP_CODES = [
-    VCPCode(
+__VCP_COMMANDS = [
+    VPCCommand(
         name="image_factory_default",
         desc="restore factory default image",
         value=0x04,
-        type=VCPCodeType.wo,
-        function=VCPCodeFunction.nc),
-    VCPCode(
+        type=ComType.wo,
+        function=ComFunction.nc),
+    VPCCommand(
         name="image_luminance",
         desc="image luminance",
         value=0x10,
-        type=VCPCodeType.rw,
-        function=VCPCodeFunction.c),
-    VCPCode(
+        type=ComType.rw,
+        function=ComFunction.c),
+    VPCCommand(
         name="image_contrast",
         desc="image contrast",
         value=0x12,
-        type=VCPCodeType.rw,
-        function=VCPCodeFunction.c),
-    VCPCode(
+        type=ComType.rw,
+        function=ComFunction.c),
+    VPCCommand(
         name="image_color_preset",
         desc="image color preset",
         value=0x14,
-        type=VCPCodeType.rw,
-        function=VCPCodeFunction.c),
-    VCPCode(
+        type=ComType.rw,
+        function=ComFunction.c),
+    VPCCommand(
         name="active_control",
         desc="active control",
         value=0x52,
-        type=VCPCodeType.ro,
-        function=VCPCodeFunction.nc),
-    VCPCode(
+        type=ComType.ro,
+        function=ComFunction.nc),
+    VPCCommand(
         name="input_select",
         desc="input select",
         value=0x60,
-        type=VCPCodeType.rw,
-        function=VCPCodeFunction.nc),
-    VCPCode(
+        type=ComType.rw,
+        function=ComFunction.nc),
+    VPCCommand(
         name="image_orientation",
         desc="image orientation",
         value=0xAA,
-        type=VCPCodeType.ro,
-        function=VCPCodeFunction.nc),
-    VCPCode(
+        type=ComType.ro,
+        function=ComFunction.nc),
+    VPCCommand(
         name="display_power_mode",
         desc="display power mode",
         value=0xD6,
-        type=VCPCodeType.rw,
-        function=VCPCodeFunction.nc),
+        type=ComType.rw,
+        function=ComFunction.nc),
 ]
 
 
-def get_vcp_code(key: Union[str, int]) -> VCPCode:
+def get_vcp_com(key: Union[str, int]) -> VPCCommand:
     if not (isinstance(key, str) or isinstance(key, int)):
         raise TypeError(f"key must be string or int. Got {type(key)}.")
-    for code in __VCP_CODES:
+    for com in __VCP_COMMANDS:
         if isinstance(key, str):
-            if code.name == key:
-                return code
+            if com.name == key:
+                return com
         else:
-            if code.value == key:
-                return code
+            if com.value == key:
+                return com
     raise LookupError(f"No VCP code matched key: {key}")
 
 
-def add_vcp_code(newcode: VCPCode):
-    for code in __VCP_CODES:
-        if newcode.name == code.name:
-            raise ValueError(f"VCP code with name {newcode.name} already exists")
-        if newcode.value == code.value:
-            raise ValueError(f"VCP code with value {newcode.value} already exists")
+def add_vcp_com(newcom: VPCCommand):
+    for com in __VCP_COMMANDS:
+        if newcom.name == com.name:
+            raise ValueError(f"VCP code with name {newcom.name} already exists")
+        if newcom.value == com.value:
+            raise ValueError(f"VCP code with value {newcom.value} already exists")
 
-    __VCP_CODES.append(newcode)
+    __VCP_COMMANDS.append(newcom)
 
 
 #
