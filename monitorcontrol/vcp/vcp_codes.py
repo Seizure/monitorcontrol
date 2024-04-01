@@ -10,19 +10,13 @@ class ComType(Enum):
     rw = 2
 
 
-@unique
-class ComFunction(Enum):
-    c = 0
-    nc = 1
-
-
 @dataclass(frozen=True)
 class VPCCommand:
     name: str
     desc: str
     value: int
     type: ComType
-    function: ComFunction
+    discreet: bool
 
     def readable(self) -> bool:
         t = ComType
@@ -39,49 +33,49 @@ __VCP_COMMANDS = [
         desc="restore factory default image",
         value=0x04,
         type=ComType.wo,
-        function=ComFunction.nc),
+        discreet=True),
     VPCCommand(
         name="image_luminance",
         desc="image luminance",
         value=0x10,
         type=ComType.rw,
-        function=ComFunction.c),
+        discreet=False),
     VPCCommand(
         name="image_contrast",
         desc="image contrast",
         value=0x12,
         type=ComType.rw,
-        function=ComFunction.c),
+        discreet=False),
     VPCCommand(
         name="image_color_preset",
         desc="image color preset",
         value=0x14,
         type=ComType.rw,
-        function=ComFunction.c),
+        discreet=False),
     VPCCommand(
         name="active_control",
         desc="active control",
         value=0x52,
         type=ComType.ro,
-        function=ComFunction.nc),
+        discreet=True),
     VPCCommand(
         name="input_select",
         desc="input select",
         value=0x60,
         type=ComType.rw,
-        function=ComFunction.nc),
+        discreet=True),
     VPCCommand(
         name="image_orientation",
         desc="image orientation",
         value=0xAA,
         type=ComType.ro,
-        function=ComFunction.nc),
+        discreet=True),
     VPCCommand(
         name="display_power_mode",
         desc="display power mode",
         value=0xD6,
         type=ComType.rw,
-        function=ComFunction.nc),
+        discreet=True),
 ]
 
 

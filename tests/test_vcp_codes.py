@@ -66,4 +66,4 @@ def test_properties_value():
     assert code.name == test_name
     assert code.value == test_value
     assert code.type == test_type
-    assert code.function == test_function
+    assert code.discreet == test_function
