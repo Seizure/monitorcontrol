@@ -19,11 +19,9 @@ class VPCCommand:
     discreet: bool
 
     def readable(self) -> bool:
-        t = ComType
         return 'r' in self.type.value
 
     def writeable(self) -> bool:
-        t = ComType
         return 'w' in self.type.value
 
 
