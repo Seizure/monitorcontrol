@@ -5,9 +5,9 @@ from typing import Union
 
 @unique
 class ComType(Enum):
-    ro = 0
-    wo = 1
-    rw = 2
+    ro = "ro"
+    wo = "wo"
+    rw = "rw"
 
 
 @dataclass(frozen=True)
@@ -20,11 +20,11 @@ class VPCCommand:
 
     def readable(self) -> bool:
         t = ComType
-        return self.type is t.ro or self.type is t.rw
+        return 'r' in self.type.value
 
     def writeable(self) -> bool:
         t = ComType
-        return self.type is t.wo or self.type is t.rw
+        return 'w' in self.type.value
 
 
 __VCP_COMMANDS = [
