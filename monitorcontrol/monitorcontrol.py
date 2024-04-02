@@ -1,7 +1,7 @@
 from typing import List, Union
 import enum
 
-from .vcp.vcp_abc import VCP
+from .vcp import VCP
 from .vcp.vcp_codes import get_vcp_com
 
 
