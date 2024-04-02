@@ -1,4 +1,5 @@
-from . import VPCCommand
+from __future__ import annotations
+from .vcp_codes import VPCCommand
 from .vcp_abc import VCP, VCPIOError, VCPPermissionError
 from types import TracebackType
 from typing import List, Optional, Tuple, Type
@@ -7,8 +8,6 @@ import struct
 import sys
 import time
 import logging
-
-from .vcp_codes import ComFunction
 
 # hide the Linux code from Windows CI coverage
 if sys.platform.startswith("linux"):
@@ -384,24 +383,25 @@ if sys.platform.startswith("linux"):
                 raise VCPIOError("unable write to I2C bus") from e
 
 
-    def get_vcps() -> List[LinuxVCP]:
-        """
-        Interrogates I2C buses to determine if they are DDC-CI capable.
+        @staticmethod
+        def get_vcps() -> List[LinuxVCP]:
+            """
+            Interrogates I2C buses to determine if they are DDC-CI capable.
 
-        Returns:
-            List of all VCPs detected.
-        """
-        vcps = []
+            Returns:
+                List of all VCPs detected.
+            """
+            vcps = []
 
-        # iterate I2C devices
-        for device in pyudev.Context().list_devices(subsystem="i2c"):
-            vcp = LinuxVCP(device.sys_number)
-            try:
-                with vcp:
+            # iterate I2C devices
+            for device in pyudev.Context().list_devices(subsystem="i2c"):
+                vcp = LinuxVCP(device.sys_number)
+                try:
+                    with vcp:
+                        pass
+                except (OSError, VCPIOError):
                     pass
-            except (OSError, VCPIOError):
-                pass
-            else:
-                vcps.append(vcp)
+                else:
+                    vcps.append(vcp)
 
-        return vcps
+            return vcps

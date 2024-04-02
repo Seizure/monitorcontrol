@@ -1,9 +1,10 @@
+from __future__ import annotations
 import abc
 import logging
 from types import TracebackType
-from typing import Optional, Tuple, Type
+from typing import Optional, Tuple, Type, List
 
-from . import VPCCommand
+from .vcp_codes import VPCCommand
 
 
 class VCPError(Exception):
@@ -77,6 +78,7 @@ class VCP(abc.ABC):
         """
         pass
 
+    @abc.abstractmethod
     def get_vcp_capabilities(self) -> dict:
         pass
 
@@ -104,3 +106,8 @@ class VCP(abc.ABC):
             _, maximum = self.get_vcp_feature(code)
             self.code_maximum[code.value] = maximum
             return maximum
+
+    @staticmethod
+    @abc.abstractmethod
+    def get_vcps() -> List[VCP]:
+        pass

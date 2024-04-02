@@ -1,4 +1,5 @@
-from . import VPCCommand
+from __future__ import annotations
+from .vcp_codes import VPCCommand
 from .vcp_abc import VCP, VCPError
 from types import TracebackType
 from typing import List, Optional, Tuple, Type
@@ -6,7 +7,7 @@ import ctypes
 import logging
 import sys
 
-from .vcp_codes import get_vcp_com, ComFunction
+from .vcp_codes import get_vcp_com
 
 # hide the Windows code from Linux CI coverage
 if sys.platform == "win32":
@@ -207,39 +208,40 @@ if sys.platform == "win32":
                 raise VCPError("failed to get VCP capabilities") from e
             return _parse_capabilities(cap_string.value.decode("ascii"))
 
-    def get_vcps() -> List[WindowsVCP]:
-        """
-        Opens handles to all physical VCPs.
+        @staticmethod
+        def get_vcps() -> List[WindowsVCP]:
+            """
+            Opens handles to all physical VCPs.
 
-        Returns:
-            List of all VCPs detected.
+            Returns:
+                List of all VCPs detected.
 
-        Raises:
-            VCPError: Failed to enumerate VCPs.
-        """
-        vcps = []
-        hmonitors = []
+            Raises:
+                VCPError: Failed to enumerate VCPs.
+            """
+            vcps = []
+            hmonitors = []
 
-        try:
+            try:
 
-            def _callback(hmonitor, hdc, lprect, lparam):
-                hmonitors.append(HMONITOR(hmonitor))
-                del hmonitor, hdc, lprect, lparam
-                return True  # continue enumeration
+                def _callback(hmonitor, hdc, lprect, lparam):
+                    hmonitors.append(HMONITOR(hmonitor))
+                    del hmonitor, hdc, lprect, lparam
+                    return True  # continue enumeration
 
-            MONITORENUMPROC = ctypes.WINFUNCTYPE(  # noqa: N806
-                BOOL, HMONITOR, HDC, ctypes.POINTER(RECT), LPARAM
-            )
-            callback = MONITORENUMPROC(_callback)
-            if not ctypes.windll.user32.EnumDisplayMonitors(0, 0, callback, 0):
-                raise VCPError("Call to EnumDisplayMonitors failed")
-        except OSError as e:
-            raise VCPError("failed to enumerate VCPs") from e
+                MONITORENUMPROC = ctypes.WINFUNCTYPE(  # noqa: N806
+                    BOOL, HMONITOR, HDC, ctypes.POINTER(RECT), LPARAM
+                )
+                callback = MONITORENUMPROC(_callback)
+                if not ctypes.windll.user32.EnumDisplayMonitors(0, 0, callback, 0):
+                    raise VCPError("Call to EnumDisplayMonitors failed")
+            except OSError as e:
+                raise VCPError("failed to enumerate VCPs") from e
 
-        for logical in hmonitors:
-            vcps.append(WindowsVCP(logical))
+            for logical in hmonitors:
+                vcps.append(WindowsVCP(logical))
 
-        return vcps
+            return vcps
 
 
     def _extract_a_cap(caps_str: str, key: str) -> str:
