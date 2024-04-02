@@ -1,5 +1,6 @@
 docs/cli.txt
 .vscode/
+.idea/
 public/
 *.orig
 
